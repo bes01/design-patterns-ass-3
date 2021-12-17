@@ -38,7 +38,7 @@ def parse_subscribe_cmd(cmd: str) -> Tuple[str, str]:
     return subscriber, channel
 
 
-def parse_publish_video_cmd(cmd: str):
+def parse_publish_video_cmd(cmd: str) -> str:
     if cmd.startswith('publish video on <'):
         cmd = cmd[len('publish video on <'):]
     else:

@@ -9,7 +9,7 @@ class OutputCollector:
     def __init__(self) -> None:
         self._output = ""
 
-    def append_output(self, partial_output: str):
+    def append_output(self, partial_output: str) -> None:
         self._output += partial_output
 
     def read_output(self) -> str:
@@ -55,7 +55,7 @@ class Channel(Subject):
         self._name: str = name
         self._output_stream = output_stream
         self._subscribers: List[Observer] = []
-        self._subscription_repository = SubscriptionRepository.get_instance()
+        self._subscription_repository = SubscriptionRepository()
         self._init_mode = True
         persistent_subscribers = self._subscription_repository.get_channel_subscribers(self._name)
         for subscriber in persistent_subscribers:
@@ -85,7 +85,7 @@ class SubscriptionSystem(OutputCollector):
         self._channels[channel_name].attach(Subscriber(subscriber, self))
         print(self.read_output())
 
-    def published_video_hook(self, channel_name: str):
+    def published_video_hook(self, channel_name: str) -> None:
         self._check_channel(channel_name)
         self._channels[channel_name].notify()
         print(self.read_output())
