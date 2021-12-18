@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.subscription_repository import SubscriptionRepository
+from app.subscription_repository import SubscriptionRepository
 
 
 class OutputCollector:
-
     def __init__(self) -> None:
         self._output = ""
 
@@ -14,12 +13,11 @@ class OutputCollector:
 
     def read_output(self) -> str:
         tmp = self._output
-        self._output = ''
+        self._output = ""
         return tmp
 
 
 class Subject(ABC):
-
     @abstractmethod
     def attach(self, observer: "Observer") -> None:
         pass
@@ -30,34 +28,33 @@ class Subject(ABC):
 
 
 class Observer(ABC):
-
     def __init__(self, name: str) -> None:
         self.name: str = name
 
     @abstractmethod
-    def update(self, ) -> None:
+    def update(self) -> None:
         pass
 
 
 class Subscriber(Observer):
-
     def __init__(self, name: str, output_stream: OutputCollector) -> None:
         super().__init__(name)
         self._output_stream = output_stream
 
     def update(self) -> None:
-        self._output_stream.append_output(f'\t{self.name}\n')
+        self._output_stream.append_output(f"\t{self.name}\n")
 
 
 class Channel(Subject):
-
     def __init__(self, name: str, output_stream: OutputCollector) -> None:
         self._name: str = name
         self._output_stream = output_stream
         self._subscribers: List[Observer] = []
-        self._subscription_repository = SubscriptionRepository()
+        self._subscription_repository = SubscriptionRepository.instance()
         self._init_mode = True
-        persistent_subscribers = self._subscription_repository.get_channel_subscribers(self._name)
+        persistent_subscribers = self._subscription_repository.get_channel_subscribers(
+            self._name
+        )
         for subscriber in persistent_subscribers:
             self.attach(Subscriber(subscriber, self._output_stream))
         self._init_mode = False
@@ -65,17 +62,18 @@ class Channel(Subject):
     def attach(self, observer: Observer) -> None:
         if not self._init_mode:
             self._subscription_repository.add_subscription(self._name, observer.name)
-            self._output_stream.append_output(f'{observer.name} subscribed to {self._name}\n')
+            self._output_stream.append_output(
+                f"{observer.name} subscribed to {self._name}\n"
+            )
         self._subscribers.append(observer)
 
     def notify(self) -> None:
-        self._output_stream.append_output(f'Notifying subscribers of {self._name}:\n')
+        self._output_stream.append_output(f"Notifying subscribers of {self._name}:\n")
         for observer in self._subscribers:
             observer.update()
 
 
 class SubscriptionSystem(OutputCollector):
-
     def __init__(self) -> None:
         super().__init__()
         self._channels: dict[str, Channel] = {}

@@ -1,22 +1,12 @@
 import sqlite3
-from typing import List
+from typing import List, Optional
 
 
-class SingletonMeta(type):
-    _instances = {}
+class SubscriptionRepository:
+    _instance: Optional["SubscriptionRepository"] = None
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-
-class SubscriptionRepository(metaclass=SingletonMeta):
-    _instance: "SubscriptionRepository" = None
-
-    def __init__(self, db_name: str = 'on_disk') -> None:
-        self._datasource = sqlite3.connect(f'db/{db_name}.db')
+    def __init__(self, db_name: str = "on_disk") -> None:
+        self._datasource = sqlite3.connect(f"../db/{db_name}.db")
 
         cursor = self._datasource.cursor()
         cursor.execute(
@@ -24,6 +14,12 @@ class SubscriptionRepository(metaclass=SingletonMeta):
             "(channel TEXT NOT NULL,  subscriber TEXT NOT NULL);"
         )
         cursor.close()
+
+    @classmethod
+    def instance(cls) -> "SubscriptionRepository":
+        if cls._instance is None:
+            cls._instance = SubscriptionRepository()
+        return cls._instance
 
     def add_subscription(self, channel: str, subscriber: str) -> None:
         cursor = self._datasource.cursor()
