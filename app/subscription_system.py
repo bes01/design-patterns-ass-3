@@ -28,9 +28,6 @@ class Subject(ABC):
 
 
 class Observer(ABC):
-    def __init__(self, name: str) -> None:
-        self.name: str = name
-
     @abstractmethod
     def update(self) -> None:
         pass
@@ -38,7 +35,7 @@ class Observer(ABC):
 
 class Subscriber(Observer):
     def __init__(self, name: str, output_stream: OutputCollector) -> None:
-        super().__init__(name)
+        self.name: str = name
         self._output_stream = output_stream
 
     def update(self) -> None:
@@ -46,6 +43,7 @@ class Subscriber(Observer):
 
 
 class Channel(Subject):
+
     def __init__(self, name: str, output_stream: OutputCollector) -> None:
         self._name: str = name
         self._output_stream = output_stream
@@ -56,38 +54,44 @@ class Channel(Subject):
             self._name
         )
         for subscriber in persistent_subscribers:
-            self.attach(Subscriber(subscriber, self._output_stream))
+            self.subscribe(Subscriber(subscriber, self._output_stream))
         self._init_mode = False
 
-    def attach(self, observer: Observer) -> None:
+    def subscribe(self, subscriber: Subscriber) -> None:
         if not self._init_mode:
-            self._subscription_repository.add_subscription(self._name, observer.name)
+            self._subscription_repository.add_subscription(self._name, subscriber.name)
             self._output_stream.append_output(
-                f"{observer.name} subscribed to {self._name}\n"
+                f"{subscriber.name} subscribed to {self._name}\n"
             )
+        self.attach(subscriber)
+
+    def notify_subscribers(self) -> None:
+        self._output_stream.append_output(f"Notifying subscribers of {self._name}:\n")
+        self.notify()
+
+    def attach(self, observer: "Observer") -> None:
         self._subscribers.append(observer)
 
     def notify(self) -> None:
-        self._output_stream.append_output(f"Notifying subscribers of {self._name}:\n")
         for observer in self._subscribers:
             observer.update()
 
 
-class SubscriptionSystem(OutputCollector):
+class SubscriptionSystem:
     def __init__(self) -> None:
-        super().__init__()
+        self._output_stream = OutputCollector()
         self._channels: dict[str, Channel] = {}
 
     def subscribe(self, subscriber: str, channel_name: str) -> None:
         self._check_channel(channel_name)
-        self._channels[channel_name].attach(Subscriber(subscriber, self))
-        print(self.read_output())
+        self._channels[channel_name].subscribe(Subscriber(subscriber, self._output_stream))
+        print(self._output_stream.read_output())
 
     def published_video_hook(self, channel_name: str) -> None:
         self._check_channel(channel_name)
-        self._channels[channel_name].notify()
-        print(self.read_output())
+        self._channels[channel_name].notify_subscribers()
+        print(self._output_stream.read_output())
 
     def _check_channel(self, channel_name: str) -> None:
         if channel_name not in self._channels:
-            self._channels[channel_name] = Channel(channel_name, self)
+            self._channels[channel_name] = Channel(channel_name, self._output_stream)

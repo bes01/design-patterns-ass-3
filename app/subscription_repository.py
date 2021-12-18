@@ -1,11 +1,17 @@
 import sqlite3
 from typing import List, Optional
 
+from app import settings
+
 
 class SubscriptionRepository:
     _instance: Optional["SubscriptionRepository"] = None
 
-    def __init__(self, db_name: str = "on_disk") -> None:
+    def __init__(self) -> None:
+        if settings.TEST_MODE:
+            db_name = settings.TEST_DB_NAME
+        else:
+            db_name = settings.PROD_DB_NAME
         self._datasource = sqlite3.connect(f"../db/{db_name}.db")
 
         cursor = self._datasource.cursor()
@@ -37,3 +43,9 @@ class SubscriptionRepository:
         subscribers = [row[0] for row in rows]
         cursor.close()
         return subscribers
+
+    def truncate_table(self) -> None:
+        cursor = self._datasource.cursor()
+        cursor.execute("delete from subscriptions")
+        self._datasource.commit()
+        cursor.close()
