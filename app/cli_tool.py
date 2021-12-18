@@ -42,6 +42,9 @@ class CMDParser:
         else:
             raise ValueError()
 
+        if len(channel.strip()) == 0 or len(subscriber.strip()) == 0:
+            raise ValueError()
+
         return subscriber, channel
 
     @staticmethod
@@ -53,11 +56,14 @@ class CMDParser:
             raise ValueError()
 
         if cmd.endswith(">"):
-            cmd = cmd[:-1]
+            channel = cmd[:-1]
         else:
             raise ValueError()
 
-        return cmd
+        if len(channel.strip()) == 0:
+            raise ValueError()
+
+        return channel
 
 
 class Command(ABC):
