@@ -15,6 +15,7 @@ class CMDParser:
     This method doesn't provide 100% accuracy,
     it checks minimal requirements for specific type
     """
+
     @staticmethod
     def get_cmd_type(cmd: str) -> CommandType:
         if cmd.startswith("subscribe <"):

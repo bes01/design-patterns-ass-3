@@ -43,7 +43,6 @@ class Subscriber(Observer):
 
 
 class Channel(Subject):
-
     def __init__(self, name: str, output_stream: OutputCollector) -> None:
         self._name: str = name
         self._output_stream = output_stream
@@ -84,7 +83,9 @@ class SubscriptionSystem:
 
     def subscribe(self, subscriber: str, channel_name: str) -> None:
         self._check_channel(channel_name)
-        self._channels[channel_name].subscribe(Subscriber(subscriber, self._output_stream))
+        self._channels[channel_name].subscribe(
+            Subscriber(subscriber, self._output_stream)
+        )
         print(self._output_stream.read_output())
 
     def published_video_hook(self, channel_name: str) -> None:
