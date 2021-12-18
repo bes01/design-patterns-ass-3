@@ -23,7 +23,8 @@ class CMDParser:
     @staticmethod
     def parse_subscribe_cmd(cmd: str) -> Tuple[str, str]:
         if cmd.startswith("subscribe <"):
-            cmd = cmd[len("subscribe <") :]
+            start_index = len("subscribe <")
+            cmd = cmd[start_index:]
         else:
             raise ValueError()
 
@@ -31,7 +32,8 @@ class CMDParser:
 
         if subscriber_end_index != -1:
             subscriber = cmd[:subscriber_end_index]
-            cmd = cmd[len(subscriber) + len("> to <") :]
+            start_index = len(subscriber) + len("> to <")
+            cmd = cmd[start_index:]
         else:
             raise ValueError()
 
@@ -45,7 +47,8 @@ class CMDParser:
     @staticmethod
     def parse_publish_video_cmd(cmd: str) -> str:
         if cmd.startswith("publish video on <"):
-            cmd = cmd[len("publish video on <") :]
+            start_index = len("publish video on <")
+            cmd = cmd[start_index:]
         else:
             raise ValueError()
 
