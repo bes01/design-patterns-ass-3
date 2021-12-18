@@ -61,7 +61,8 @@ class CMDParser:
 
 
 class Command(ABC):
-    def __init__(self, subscription_system: SubscriptionSystem):
+    def __init__(self, cmd: str, subscription_system: SubscriptionSystem):
+        self._cmd = cmd
         self._subscription_system = subscription_system
 
     @abstractmethod
@@ -70,24 +71,21 @@ class Command(ABC):
 
 
 class PublishVideoCommand(Command):
-    def __init__(self, channel: str, subscription_system: SubscriptionSystem):
-        super().__init__(subscription_system)
-        self._channel = channel
+    def __init__(self, cmd: str, subscription_system: SubscriptionSystem):
+        super().__init__(cmd, subscription_system)
 
     def execute(self) -> None:
-        self._subscription_system.published_video_hook(self._channel)
+        channel = CMDParser.parse_publish_video_cmd(self._cmd)
+        self._subscription_system.published_video_hook(channel)
 
 
 class SubscribeCommand(Command):
-    def __init__(
-        self, subscriber: str, channel: str, subscription_system: SubscriptionSystem
-    ) -> None:
-        super().__init__(subscription_system)
-        self._subscriber = subscriber
-        self._channel = channel
+    def __init__(self, cmd: str, subscription_system: SubscriptionSystem):
+        super().__init__(cmd, subscription_system)
 
     def execute(self) -> None:
-        self._subscription_system.subscribe(self._subscriber, self._channel)
+        subscriber, channel = CMDParser.parse_subscribe_cmd(self._cmd)
+        self._subscription_system.subscribe(subscriber, channel)
 
 
 class CLI:
@@ -98,13 +96,9 @@ class CLI:
         try:
             cmd_type = CMDParser.get_cmd_type(cmd)
             if cmd_type == CommandType.PUBLISH_VIDEO:
-                channel = CMDParser.parse_publish_video_cmd(cmd)
-                PublishVideoCommand(channel, self._subscription_system).execute()
+                PublishVideoCommand(cmd, self._subscription_system).execute()
             elif cmd_type == CommandType.SUBSCRIBE:
-                subscriber, channel = CMDParser.parse_subscribe_cmd(cmd)
-                SubscribeCommand(
-                    subscriber, channel, self._subscription_system
-                ).execute()
+                SubscribeCommand(cmd, self._subscription_system).execute()
             else:
                 raise Exception("Unknown cmd type!")
         except ValueError:
